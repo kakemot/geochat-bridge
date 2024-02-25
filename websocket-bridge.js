@@ -34,4 +34,4 @@ wss.on('connection', function connection(ws) {
     });
 });
 
-console.log('Chat server running);
+console.log('Chat server running');
