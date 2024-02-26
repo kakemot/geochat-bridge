@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 
 const port = process.env.PORT || 8080; // Default to 8080 if PORT isn't set
+const clients = new Map(); // Use a Map to associate clients with locations
 const wss = new WebSocket.Server({ port: port, path: '/chat' });
 const messagesByCity = new Map(); // Store messages by city
 
