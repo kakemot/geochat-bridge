@@ -30,7 +30,7 @@ function checkIfNearby(long1, lat1, long2, lat2, km) {
 function broadcastMessage(message, senderWs, senderLocation) {
     clients.forEach((location, client) => {
         if (client.readyState === WebSocket.OPEN && client !== senderWs) { // Directly compare WebSocket instances
-            if (checkIfNearby(location.longitude, location.latitude, location.longitude, senderLocation.latitude, 10)) {
+            if (location.city == senderLocation.city) {
                 client.send(message);
             }
         }
