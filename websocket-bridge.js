@@ -65,9 +65,8 @@ wss.on('connection', function connection(ws) {
 
 console.log('Chat server running');
 
-
     ws.on('close', function close() {
         clients.delete(ws);
     });
-});
+
 console.log('Chat server running');
