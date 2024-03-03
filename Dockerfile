@@ -15,6 +15,7 @@ COPY . .
 
 # Your application binds to port 8080 so you'll use the EXPOSE instruction to have it mapped by the docker daemon
 EXPOSE 8080
+EXPOSE 10000
 ENV HOST '0.0.0.0'
 
 # Define the command to run your app using CMD which defines your runtime
