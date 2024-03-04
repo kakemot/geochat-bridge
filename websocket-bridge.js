@@ -9,9 +9,16 @@ const clients = new Map();
 const messagesByCity = new Map();
 
 async function storeMessage(city, username, locality, content, timestamp, gifUrl) {
-    const filePath = path.join(__dirname, `messages/${city}-messages.txt`);
+    const dirPath = path.join(__dirname, 'messages');
+    const filePath = path.join(dirPath, `${city}-messages.txt`);
     const messageString = JSON.stringify({ username, content, locality, timestamp, gifUrl }) + "\n";
-    await fs.appendFile(filePath, messageString);
+
+    try {
+        await fs.mkdir(dirPath, { recursive: true });
+        await fs.appendFile(filePath, messageString);
+    } catch (error) {
+        console.error('Failed to store message:', error);
+    }
 }
 
 async function readLastMessages(city, count) {
@@ -73,3 +80,4 @@ wss.on('connection', function connection(ws) {
 });
 
 console.log('Chat server running');
+
