@@ -1,22 +1,30 @@
 const WebSocket = require('ws');
-const port = process.env.PORT || 10000; // Ensure the environment variable is 'PORT', not 'port'
+const fs = require('fs').promises;
+const path = require('path');
+
+const port = process.env.PORT || 10000;
 const host = '0.0.0.0'; // Listen on all network interfaces
 const wss = new WebSocket.Server({ port: port, host: host, path: '/chat' });
-const clients = new Map(); // Use a Map to associate clients with locations
-const messagesByCity = new Map(); // Store messages by city
+const clients = new Map();
+const messagesByCity = new Map();
 
-function storeMessage(city, username, locality, content, timestamp, gifUrl) {
-    if (!messagesByCity.has(city)) {
-        messagesByCity.set(city, []);
+async function storeMessage(city, username, locality, content, timestamp, gifUrl) {
+    const filePath = path.join(__dirname, `messages/${city}-messages.txt`);
+    const messageString = JSON.stringify({ username, content, locality, timestamp, gifUrl }) + "\n";
+    await fs.appendFile(filePath, messageString);
+}
+
+async function readLastMessages(city, count) {
+    const filePath = path.join(__dirname, `messages/${city}-messages.txt`);
+
+    try {
+        const data = await fs.readFile(filePath, 'utf8');
+        const messages = data.trim().split('\n').map(line => JSON.parse(line));
+        return messages.slice(-count); // Return the last 'count' messages
+    } catch (error) {
+        console.error('Failed to read messages:', error);
+        return [];
     }
-    let messages = messagesByCity.get(city);
-    // Store both username and content in each message
-    messages.push({ username, content, locality, timestamp, gifUrl });
-    // Keep only the last 10 messages for the city
-    if (messages.length > 10) {
-        messages = messages.slice(-10);
-    }
-    messagesByCity.set(city, messages);
 }
 
 function broadcastMessage(username, content, locality, senderWs, senderLocation, timestamp, gifUrl) {
@@ -25,15 +33,14 @@ function broadcastMessage(username, content, locality, senderWs, senderLocation,
         if (client.readyState === WebSocket.OPEN && client !== senderWs) {
             const clientCity = location.city;
             if (clientCity === senderCity) {
-                // Send both username and content as a JSON string
                 client.send(JSON.stringify({ username, content, locality, timestamp, gifUrl }));
             }
         }
     });
 }
 
-function sendLastMessages(client, city, locality) {
-    const messages = messagesByCity.get(city) || [];
+async function sendLastMessages(client, city, locality) {
+    const messages = await readLastMessages(city, 10)
     messages.forEach(({ username, content, locality, timestamp, gifUrl }) => {
         // Send both username and content as a JSON string
         client.send(JSON.stringify({ username, content, locality, timestamp, gifUrl }));
@@ -66,4 +73,3 @@ wss.on('connection', function connection(ws) {
 });
 
 console.log('Chat server running');
-
